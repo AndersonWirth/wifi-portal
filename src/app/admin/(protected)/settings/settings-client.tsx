@@ -6,7 +6,7 @@ import { Save, Loader2, Eye } from 'lucide-react'
 import LogoUpload from '@/components/admin/logo-upload'
 
 interface Company {
-  id: string; name: string; slug: string; logoUrl: string | null
+  id: string; name: string; slug: string; logoUrl: string | null; faviconUrl: string | null
   primaryColor: string; secondaryColor: string; accentColor: string
   pageTitle: string; welcomeText: string; footerText: string
   postLoginRedirectUrl: string | null; lgpdEnabled: boolean; lgpdText: string | null
