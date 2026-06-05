@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<!--
+  ============================================================
+  ARQUIVO: login.html
+  DESTINO: /flash/hotspot/login.html  (no MikroTik)
+
+  INSTRUÇÕES:
+  1. Edite PORTAL_URL abaixo com a URL da sua Vercel
+  2. Edite COMPANY_SLUG com o slug da empresa cadastrada
+  3. Envie via FTP (IP do MikroTik, porta 21) ou Winbox > Files
+  ============================================================
+-->
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Redirecionando...</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #1a1a2e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .box {
+      text-align: center;
+      color: rgba(255,255,255,0.6);
+    }
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid rgba(255,255,255,0.1);
+      border-top-color: #FF6B35;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    p { font-size: 14px; margin: 0; }
+  </style>
+</head>
+<body>
+<div class="box">
+  <div class="spinner"></div>
+  <p>Carregando portal Wi-Fi...</p>
+</div>
+
+<script>
+  // ============================================================
+  // CONFIGURAÇÃO — edite apenas estas duas linhas:
+  var PORTAL_URL   = 'https://SEU-APP.vercel.app';  // URL da Vercel (sem barra final)
+  var COMPANY_SLUG = 'mercado-demo';                  // Slug da empresa no painel
+  // ============================================================
+
+  // Captura os parâmetros enviados pelo MikroTik
+  function getParam(name) {
+    var url = window.location.href;
+    name = name.replace(/[\[\]]/g, '\\$&');
+    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)');
+    var results = regex.exec(url);
+    if (!results) return '';
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, ' '));
+  }
+
+  var mac           = getParam('mac');
+  var ip            = getParam('ip');
+  var linkLogin     = getParam('link-login');
+  var linkLoginOnly = getParam('link-login-only');
+  var linkOrig      = getParam('link-orig');
+
+  // Monta a URL do portal com todos os parâmetros
+  var dest = PORTAL_URL + '/portal/' + COMPANY_SLUG
+    + '?mac='              + encodeURIComponent(mac)
+    + '&ip='               + encodeURIComponent(ip)
+    + '&link-login='       + encodeURIComponent(linkLogin)
+    + '&link-login-only='  + encodeURIComponent(linkLoginOnly)
+    + '&link-orig='        + encodeURIComponent(linkOrig);
+
+  // Redireciona imediatamente
+  window.location.replace(dest);
+</script>
+
+<!--
+  FALLBACK (caso JavaScript esteja desabilitado):
+  Substitua os valores abaixo manualmente se necessário.
+
+  <meta http-equiv="refresh" content="0; url=https://SEU-APP.vercel.app/portal/mercado-demo?mac=$(mac)&ip=$(ip)&link-login=$(link-login)&link-login-only=$(link-login-only)&link-orig=$(link-orig)">
+
+  ATENÇÃO: As variáveis $(mac), $(ip) etc. só funcionam quando
+  o arquivo está servido PELO MIKROTIK. Não testá-las localmente.
+-->
+</body>
+</html>

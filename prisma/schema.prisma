@@ -1,0 +1,199 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Company {
+  id                   String    @id @default(cuid())
+  name                 String
+  slug                 String    @unique
+  logoUrl              String?
+  logoPublicId         String?
+  faviconUrl           String?
+  faviconPublicId      String?
+  primaryColor         String    @default("#FF6B35")
+  secondaryColor       String    @default("#1A1A2E")
+  accentColor          String    @default("#FF9500")
+  pageTitle            String    @default("Wi-Fi Gratuito")
+  welcomeText          String    @default("Conecte-se à internet gratuitamente!")
+  footerText           String    @default("Ao conectar, você concorda com nossos termos de uso.")
+  customDomain         String?   @unique
+  postLoginRedirectUrl String?
+  lgpdEnabled          Boolean   @default(false)
+  lgpdText             String?
+  active               Boolean   @default(true)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  users      User[]
+  campaigns  Campaign[]
+  leads      WifiLead[]
+  accessLogs AccessLog[]
+  settings   Setting[]
+
+  @@map("companies")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          UserRole  @default(COMPANY_ADMIN)
+  companyId     String?
+  company       Company?  @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts Account[]
+  sessions Session[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model Campaign {
+  id          String         @id @default(cuid())
+  companyId   String
+  company     Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name        String
+  description String?        @db.Text
+  startDate   DateTime
+  endDate     DateTime
+  active      Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  promotions Promotion[]
+
+  @@map("campaigns")
+}
+
+model Promotion {
+  id          String   @id @default(cuid())
+  campaignId  String
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  title       String
+  description String?  @db.Text
+  sortOrder   Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  images PromotionImage[]
+
+  @@map("promotions")
+}
+
+model PromotionImage {
+  id          String    @id @default(cuid())
+  promotionId String
+  promotion   Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  url         String
+  publicId    String
+  hash        String?
+  width       Int?
+  height      Int?
+  size        Int?
+  format      String?
+  altText     String?
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+
+  @@map("promotion_images")
+}
+
+model WifiLead {
+  id          String   @id @default(cuid())
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name        String
+  phone       String
+  ipAddress   String?
+  macAddress  String?
+  userAgent   String?  @db.Text
+  origin      String?
+  lgpdAccepted Boolean @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([companyId, createdAt])
+  @@index([phone])
+  @@map("wifi_leads")
+}
+
+model AccessLog {
+  id         String   @id @default(cuid())
+  companyId  String
+  company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  ipAddress  String?
+  macAddress String?
+  userAgent  String?  @db.Text
+  success    Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  @@index([companyId, createdAt])
+  @@map("access_logs")
+}
+
+model Setting {
+  id        String  @id @default(cuid())
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  key       String
+  value     String  @db.Text
+
+  @@unique([companyId, key])
+  @@map("settings")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  COMPANY_ADMIN
+  VIEWER
+}
